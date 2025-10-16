@@ -4,17 +4,8 @@
     <div class="bg-dark text-white p-3 shadow d-flex align-items-center">
       <h1 class="h5 fw-semibold m-0">Crew Planning Dashboard</h1>
       <div class="ms-auto d-flex align-items-center gap-2">
-        <input
-          type="month"
-          v-model="startMonthStr"
-          class="form-control form-control-sm"
-          style="width: 160px"
-        />
-        <select
-          v-model.number="monthCount"
-          class="form-select form-select-sm"
-          style="width: 100px"
-        >
+        <input type="month" v-model="startMonthStr" class="form-control form-control-sm" style="width: 160px" />
+        <select v-model.number="monthCount" class="form-select form-select-sm" style="width: 100px">
           <option :value="6">6</option>
           <option :value="9">9</option>
           <option :value="12">12</option>
@@ -23,78 +14,21 @@
       </div>
     </div>
 
-    <div class="d-flex flex-grow-1 overflow-hidden">
-      <!-- Left: Vessels / Ranks -->
-      <div
-        class="bg-secondary-subtle border-end overflow-auto"
-        style="width: 16rem"
-      >
-        <div
-          class="position-sticky top-0 bg-secondary border-bottom p-3"
-          style="z-index: 20"
-        >
-          <div
-            class="d-flex justify-content-between small fw-semibold text-secondary-emphasis"
-          >
+    <div class="d-flex overflow-hidden">
+      <div class="bg-secondary border-end overflow-auto" style="width: 16rem">
+        <div class="position-sticky top-0 p-3" style="z-index: 20">
+          <div class="d-flex justify-content-between small fw-semibold text-secondary-emphasis">
             <span>Vessel</span>
             <span>Rank</span>
           </div>
         </div>
-
-        <div
-          v-for="(vessel, vIdx) in processedVessels"
-          :key="vIdx"
-          class="border-bottom"
-        >
-          <div
-            class="d-flex align-items-center justify-content-between p-3 bg-light cursor-pointer"
-            @click="toggleVessel(vessel.name)"
-          >
-            <div class="d-flex align-items-center gap-2">
-              <font-awesome-icon
-                v-if="expandedVessels[vessel.name]"
-                icon="chevron-down"
-                class="text-secondary"
-              />
-              <font-awesome-icon
-                v-else
-                icon="chevron-right"
-                class="text-secondary"
-              />
-              <span class="fw-medium small text-dark">{{ vessel.name }}</span>
-            </div>
-          </div>
-
-          <div v-if="expandedVessels[vessel.name]" class="bg-white">
-            <div
-              v-for="(rank, rIdx) in vessel.ranks"
-              :key="rIdx"
-              class="d-flex align-items-center p-3 ps-4 border-top"
-              :style="{
-                height: getMaxRowsForRank(rank.assignments) * rowHeight + 'px',
-              }"
-            >
-              <font-awesome-icon icon="user" class="text-secondary me-2" />
-              <span class="small text-secondary">{{ rank.title }}</span>
-            </div>
-          </div>
-        </div>
       </div>
-
-      <div
-        class="flex-grow-1 d-flex flex-column overflow-hidden position-relative"
-      >
-        <div
-          class="bg-white border-bottom position-sticky top-0"
-          style="z-index: 10"
-        >
+      <div class="flex-grow-1 d-flex flex-column overflow-hidden position-relative">
+        <div class="bg-white border-bottom position-sticky top-0" style="z-index: 10">
           <div class="d-flex" :style="{ marginLeft: -scrollLeft + 'px' }">
-            <div
-              v-for="(m, idx) in monthsBar"
-              :key="idx"
-              class="border-end text-center py-2 bg-light flex-shrink-0 d-flex flex-column justify-content-center"
-              :style="{ width: monthBarCellWidth + 'px' }"
-            >
+            <div v-for="(m, idx) in monthsBar" :key="idx"
+              class="border-end text-center bg-light flex-shrink-0 d-flex flex-column justify-content-center"
+              :style="{ width: Math.max(m.days * dayWidth, 100) + 'px', height: '50px' }">
               <div class="small fw-semibold text-secondary">
                 {{ m.monthName }}
               </div>
@@ -104,73 +38,55 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div
-          ref="timelineRef"
-          class="flex-grow-1 overflow-auto"
-          @scroll="onScroll"
-        >
-          <div
-            :style="{ width: totalDays * dayWidth + 'px', minWidth: '100%' }"
-          >
-            <div
-              v-for="(vessel, vIdx) in processedVessels"
-              :key="vIdx"
-              class="border-bottom"
-            >
-              <div class="bg-light" style="height: 48px"></div>
+    <!-- Schedule alanı -->
+    <div class="d-flex overflow-auto" style="border-top: 1px solid #dee2e6; height: 500px; width: 100%">
+      <!-- Left: Vessels / Ranks -->
+      <!-- Vessel Alanı -->
+      <div ref="vesselRef" class="bg-secondary-subtle border-end overflow-hidden" style="width: 16rem"
+        @scroll="onVesselScroll">
+        <div v-for="(row, idx) in allRows" :key="idx" class="border-bottom" :style="{ height: row.height + 'px' }">
+          <div v-if="row.type === 'vessel'"
+            class="d-flex align-items-center justify-content-between p-3 bg-light cursor-pointer"
+            @click="toggleVessel(row.vessel.name)">
+            <div class="d-flex align-items-center gap-2">
+              <font-awesome-icon v-if="expandedVessels[row.vessel.name]" icon="chevron-down" class="text-secondary" />
+              <font-awesome-icon v-else icon="chevron-right" class="text-secondary" />
+              <span class="fw-medium small text-dark" :title="row.vessel.name"
+                style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: inline-block; max-width: 100%;">{{
+                  row.vessel.name }}</span>
+            </div>
+          </div>
+          <div v-if="row.type === 'rank'" class="d-flex align-items-center p-3 ps-4 border-top bg-white">
+            <font-awesome-icon icon="user" class="text-secondary me-2" />
+            <span class="small text-secondary" :title="row.rank.title"
+              style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: inline-block; max-width: 100%;">{{
+                row.rank.title }}</span>
+          </div>
+        </div>
+      </div>
 
-              <div v-if="expandedVessels[vessel.name]" class="bg-white">
-                <div
-                  v-for="(rank, rIdx) in vessel.ranks"
-                  :key="rIdx"
-                  class="position-relative border-top"
-                  :style="{
-                    height:
-                      getMaxRowsForRank(rank.assignments) * rowHeight + 'px',
-                  }"
-                >
-                  <div
-                    v-for="(assignment, aIdx) in rank.assignments"
-                    :key="aIdx"
-                    class="position-absolute text-white small px-2 py-1 rounded shadow-sm d-flex align-items-center justify-content-between overflow-hidden cursor-pointer"
-                    :class="getStatusColor(assignment.status)"
-                    :style="{
-                      left: assignment.start * dayWidth + 'px',
-                      width:
-                        (assignment.renderDuration || assignment.duration) *
-                          dayWidth +
-                        'px',
-                      top: assignment.row * rowHeight + 4 + 'px',
-                      height: '40px',
-                    }"
-                    @mouseenter="(e) => handleMouseEnter(e, assignment)"
-                    @mouseleave="handleMouseLeave"
-                  >
-                    <span class="text-truncate fw-medium">{{
-                      assignment.name || "Unassigned"
-                    }}</span>
-                    <span class="ms-2 small opacity-75 text-nowrap"
-                      >{{
-                        assignment.renderDuration || assignment.duration
-                      }}d</span
-                    >
-
-                    <div
-                      class="position-absolute end-0 top-0 bottom-0"
-                      style="width: 8px; cursor: ew-resize"
-                      @mousedown="
-                        (e) =>
-                          handleResizeStart(e, vIdx, rIdx, aIdx, assignment)
-                      "
-                    />
-                    <div
-                      v-if="assignment._ongoing"
-                      class="position-absolute"
-                      style="right: 10px; top: 50%; transform: translateY(-50%)"
-                    >
-                      <font-awesome-icon icon="arrow-right" />
-                    </div>
+      <!-- TimeLine Alanı -->
+      <div class="flex-grow-1 d-flex flex-column overflow-hidden position-relative">
+        <div ref="timelineRef" class="flex-grow-1 overflow-auto" @scroll="onScroll">
+          <div :style="{ width: totalDays * dayWidth + 'px', minWidth: '100%' }">
+            <div v-for="(row, idx) in allRows" :key="idx" class="border-bottom" :style="{ height: row.height + 'px' }">
+              <div v-if="row.type === 'rank'" class="position-relative border-top bg-white">
+                <div v-for="(assignment, aIdx) in row.rank.assignments" :key="aIdx"
+                  class="position-absolute text-white small px-2 py-1 rounded shadow-sm d-flex align-items-center justify-content-between overflow-hidden cursor-pointer"
+                  :class="getStatusColor(assignment.status)"
+                  :style="{ left: assignment.start * dayWidth + 'px', width: (assignment.renderDuration || assignment.duration) * dayWidth + 'px', top: assignment.row * rowHeight + 4 + 'px', height: '40px' }"
+                  @mouseenter="(e) => handleMouseEnter(e, assignment)" @mouseleave="handleMouseLeave">
+                  <span class="text-truncate fw-medium">{{ assignment.name || "Unassigned" }}</span>
+                  <span class="ms-2 small opacity-75 text-nowrap">{{ assignment.renderDuration || assignment.duration
+                  }}d</span>
+                  <div class="position-absolute end-0 top-0 bottom-0" style="width: 8px; cursor: ew-resize"
+                    @mousedown="(e) => handleResizeStart(e, row.vIdx, row.rIdx, aIdx, assignment)" />
+                  <div v-if="assignment._ongoing" class="position-absolute"
+                    style="right: 10px; top: 50%; transform: translateY(-50%)">
+                    <font-awesome-icon icon="arrow-right" />
                   </div>
                 </div>
               </div>
@@ -178,28 +94,21 @@
           </div>
         </div>
 
-        <div
-          v-if="tooltip"
-          class="position-fixed bg-white shadow rounded p-3 border"
-          :style="{
-            left: tooltip.x + 'px',
-            top: tooltip.y + 'px',
-            transform: 'translate(-50%, -100%)',
-            minWidth: '280px',
-            zIndex: 1050,
-            pointerEvents: 'none',
-          }"
-        >
+        <div v-if="tooltip" class="position-fixed bg-white shadow rounded p-3 border" :style="{
+          left: tooltip.x + 'px',
+          top: tooltip.y + 'px',
+          transform: 'translate(-50%, -100%)',
+          minWidth: '280px',
+          zIndex: 1050,
+          pointerEvents: 'none',
+        }">
           <div class="d-flex gap-3">
             <div class="flex-shrink-0">
-              <div
-                class="rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold"
-                style="
+              <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-semibold" style="
                   width: 48px;
                   height: 48px;
                   background: linear-gradient(135deg, #60a5fa, #2563eb);
-                "
-              >
+                ">
                 {{
                   tooltip.data.name
                     ? tooltip.data.name.substring(0, 2).toUpperCase()
@@ -254,10 +163,8 @@ export default {
       rowHeight: 48,
       startMonthStr: "",
       monthCount: 12,
-      monthBarCellWidth: 120,
 
       vessels: [],
-      rawItems: [],
     };
   },
   computed: {
@@ -298,10 +205,25 @@ export default {
           result.forEach((a, idx) => {
             a.row = this.calculateRowForAssignment(result, idx);
           });
-          r.assignments = result;
         });
       });
       return deep;
+    },
+    allRows() {
+      const rows = [];
+      let vIdx = 0;
+      this.processedVessels.forEach(v => {
+        rows.push({ type: 'vessel', vessel: v, height: 48, vIdx });
+        if (this.expandedVessels[v.name]) {
+          let rIdx = 0;
+          v.ranks.forEach(r => {
+            rows.push({ type: 'rank', vessel: v, rank: r, height: this.getMaxRowsForRank(r.assignments) * this.rowHeight, vIdx, rIdx });
+            rIdx++;
+          });
+        }
+        vIdx++;
+      });
+      return rows;
     },
     monthsBar() {
       if (!this.startMonthStr) return [];
@@ -341,7 +263,6 @@ export default {
     async loadData() {
       const res = await fetch("/data.json");
       const items = await res.json();
-      this.rawItems = items;
       const grouped = {};
       items.forEach((it) => {
         const vesselName = it.VesselName || it.vesselName || "Unknown Vessel";
@@ -395,7 +316,18 @@ export default {
     },
     onScroll() {
       const el = this.$refs.timelineRef;
-      if (el) this.scrollLeft = el.scrollLeft;
+      if (el) {
+        this.scrollLeft = el.scrollLeft;
+        if (this.$refs.vesselRef) {
+          this.$refs.vesselRef.scrollTop = el.scrollTop;
+        }
+      }
+    },
+    onVesselScroll() {
+      const el = this.$refs.vesselRef;
+      if (el && this.$refs.timelineRef) {
+        this.$refs.timelineRef.scrollTop = el.scrollTop;
+      }
     },
     getStatusColor(status) {
       switch (status) {
