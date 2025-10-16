@@ -47,7 +47,8 @@
       <!-- Vessel Alanı -->
       <div ref="vesselRef" class="bg-secondary-subtle border-end overflow-hidden" style="width: 16rem"
         @scroll="onVesselScroll">
-        <div v-for="(row, idx) in allRows" :key="idx" class="border-bottom" :style="{ height: row.height + 'px' }">
+        <div v-for="(row, idx) in allRows" :key="idx" class="border-bottom bg-white"
+          :style="{ height: row.height + 'px' }">
           <div v-if="row.type === 'vessel'"
             class="d-flex align-items-center justify-content-between p-3 bg-light cursor-pointer"
             @click="toggleVessel(row.vessel.name)">
@@ -56,10 +57,10 @@
               <font-awesome-icon v-else icon="chevron-right" class="text-secondary" />
               <span class="fw-medium small text-dark" :title="row.vessel.name"
                 style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: inline-block; max-width: 100%;">{{
-  row.vessel.name }}</span>
+                  row.vessel.name }}</span>
             </div>
           </div>
-          <div v-if="row.type === 'rank'" class="d-flex align-items-center p-3 ps-4 border-top bg-white">
+          <div v-if="row.type === 'rank'" class="d-flex align-items-center p-3 ps-4 border-top">
             <font-awesome-icon icon="user" class="text-secondary me-2" />
             <span class="small text-secondary" :title="row.rank.title"
               style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: inline-block; max-width: 100%;">{{
