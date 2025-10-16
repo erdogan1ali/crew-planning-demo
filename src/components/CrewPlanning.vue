@@ -56,7 +56,7 @@
               <font-awesome-icon v-else icon="chevron-right" class="text-secondary" />
               <span class="fw-medium small text-dark" :title="row.vessel.name"
                 style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: inline-block; max-width: 100%;">{{
-                  row.vessel.name }}</span>
+  row.vessel.name }}</span>
             </div>
           </div>
           <div v-if="row.type === 'rank'" class="d-flex align-items-center p-3 ps-4 border-top bg-white">
@@ -82,7 +82,8 @@
                   <span class="text-truncate fw-medium">{{ assignment.name || "Unassigned" }}</span>
                   <span class="ms-2 small opacity-75 text-nowrap">{{ assignment.renderDuration || assignment.duration
                   }}d</span>
-                  <div class="position-absolute end-0 top-0 bottom-0" style="width: 8px; cursor: ew-resize"
+                  <div class="position-absolute end-0 top-0 bottom-0"
+                    style="width: 16px; cursor: ew-resize; background: rgba(0,0,0,0.1)"
                     @mousedown="(e) => handleResizeStart(e, row.vIdx, row.rIdx, aIdx, assignment)" />
                   <div v-if="assignment._ongoing" class="position-absolute"
                     style="right: 10px; top: 50%; transform: translateY(-50%)">
@@ -128,14 +129,7 @@
                 </div>
                 <div class="d-flex justify-content-between">
                   <span class="fw-medium">End Date:</span>
-                  <span>{{
-                    formatDate(
-                      calculateEndDate(
-                        tooltip.data.startDate,
-                        tooltip.data.duration
-                      )
-                    )
-                  }}</span>
+                  <span>{{ formatDate(tooltip.data.endDate) }}</span>
                 </div>
                 <div class="d-flex justify-content-between">
                   <span class="fw-medium">Duration:</span>
@@ -400,6 +394,8 @@ export default {
       }
     },
     handleResizeStart(e, vesselIdx, rankIdx, assignmentIdx, assignment) {
+      console.log("Resize start", vesselIdx, rankIdx, assignmentIdx, assignment);
+      e.preventDefault();
       e.stopPropagation();
       this.resizing = {
         vesselIdx,
@@ -432,6 +428,12 @@ export default {
       const a =
         v.ranks[rankIdx].assignments[origIdx != null ? origIdx : assignmentIdx];
       this.$set(a, "duration", newDuration);
+      console.log("New Duration:", newDuration);
+      this.$set(a, "endDate", this.calculateEndDate(a.startDate, newDuration));
+      // tooltip güncelle - tooltip varsa tamamen yeniden oluştur
+      if (this.tooltip) {
+        this.$set(this.tooltip, 'data', { ...this.tooltip.data, duration: newDuration, endDate: this.calculateEndDate(a.startDate, newDuration) });
+      }
     },
     _onMouseUp() {
       this.resizing = null;
