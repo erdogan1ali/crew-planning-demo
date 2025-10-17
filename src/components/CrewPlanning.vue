@@ -1,19 +1,5 @@
 <template>
-  <div class="min-vh-100 bg-light d-flex flex-column">
-    <!-- Header -->
-    <div class="bg-dark text-white p-3 shadow d-flex align-items-center">
-      <h1 class="h5 fw-semibold m-0">Crew Planning Dashboard</h1>
-      <div class="ms-auto d-flex align-items-center gap-2">
-        <input type="month" v-model="startMonthStr" class="form-control form-control-sm" style="width: 160px" />
-        <select v-model.number="monthCount" class="form-select form-select-sm" style="width: 100px">
-          <option :value="6">6</option>
-          <option :value="9">9</option>
-          <option :value="12">12</option>
-          <option :value="15">15</option>
-        </select>
-      </div>
-    </div>
-
+  <div class="bg-light d-flex flex-column">
     <div class="d-flex overflow-hidden">
       <div class="bg-secondary border-end overflow-auto" style="width: 16rem">
         <div class="position-sticky top-0 p-3" style="z-index: 20">
@@ -48,9 +34,9 @@
       <div ref="vesselRef" class="bg-secondary-subtle border-end overflow-hidden" style="width: 16rem"
         @scroll="onVesselScroll">
         <div v-for="(row, idx) in allRows" :key="idx" class="border-bottom bg-white"
-          :style="{ height: row.height + 'px' }">
+          :style="{ height: (row.height + 3) + 'px' }">
           <div v-if="row.type === 'vessel'"
-            class="d-flex align-items-center justify-content-between p-3 bg-light cursor-pointer"
+            class="d-flex align-items-center justify-content-between p-2 bg-light cursor-pointer"
             @click="toggleVessel(row.vessel.name)">
             <div class="d-flex align-items-center gap-2">
               <font-awesome-icon v-if="expandedVessels[row.vessel.name]" icon="chevron-down" class="text-secondary" />
@@ -60,7 +46,7 @@
                   row.vessel.name }}</span>
             </div>
           </div>
-          <div v-if="row.type === 'rank'" class="d-flex align-items-center p-3 ps-4 border-top">
+          <div v-if="row.type === 'rank'" class="d-flex align-items-center p-2 ps-4 border-top">
             <font-awesome-icon icon="user" class="text-secondary me-2" />
             <span class="small text-secondary" :title="row.rank.title"
               style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden; display: inline-block; max-width: 100%;">{{
@@ -73,12 +59,12 @@
       <div class="flex-grow-1 d-flex flex-column overflow-hidden position-relative">
         <div ref="timelineRef" class="flex-grow-1 overflow-auto" @scroll="onScroll">
           <div :style="{ width: totalDays * dayWidth + 'px', minWidth: '100%' }">
-            <div v-for="(row, idx) in allRows" :key="idx" class="border-bottom" :style="{ height: row.height + 'px' }">
+            <div v-for="(row, idx) in allRows" :key="idx" class="border-bottom" :style="{ height: (row.height + 3) + 'px' }">
               <div v-if="row.type === 'rank'" class="position-relative border-top bg-white">
                 <div v-for="(assignment, aIdx) in row.rank.assignments" :key="aIdx"
                   class="position-absolute text-white small px-2 py-1 rounded shadow-sm d-flex align-items-center justify-content-between overflow-hidden cursor-pointer"
                   :class="getStatusColor(assignment.status)"
-                  :style="{ left: assignment.start * dayWidth + 'px', width: (assignment.renderDuration || assignment.duration) * dayWidth + 'px', top: assignment.row * rowHeight + 4 + 'px', height: '40px' }"
+                  :style="{ left: assignment.start * dayWidth + 'px', width: (assignment.renderDuration || assignment.duration) * dayWidth + 'px', top: assignment.row * rowHeight + 3 + 'px', height: '30px' }"
                   @mouseenter="(e) => handleMouseEnter(e, assignment)" @mouseleave="handleMouseLeave">
                   <span class="text-truncate fw-medium">{{ assignment.name || "Unassigned" }}</span>
                   <span class="ms-2 small opacity-75 text-nowrap">{{ assignment.renderDuration || assignment.duration
@@ -155,7 +141,7 @@ export default {
       resizing: null,
 
       dayWidth: 3,
-      rowHeight: 48,
+      rowHeight: 32,
       startMonthStr: "",
       monthCount: 12,
 
@@ -208,7 +194,7 @@ export default {
       const rows = [];
       let vIdx = 0;
       this.processedVessels.forEach(v => {
-        rows.push({ type: 'vessel', vessel: v, height: 48, vIdx });
+        rows.push({ type: 'vessel', vessel: v, height: this.rowHeight, vIdx });
         if (this.expandedVessels[v.name]) {
           let rIdx = 0;
           v.ranks.forEach(r => {
