@@ -69,7 +69,7 @@
                   <span class="text-truncate fw-medium">{{ assignment.name || "Unassigned" }}</span>
                   <span class="ms-2 small opacity-75 text-nowrap">{{ assignment.renderDuration || assignment.duration
                   }}d</span>
-                  <div class="position-absolute end-0 top-0 bottom-0"
+                  <div v-if="assignment.type === 3" class="position-absolute end-0 top-0 bottom-0"
                     style="width: 16px; cursor: ew-resize; background: rgba(0,0,0,0.1)"
                     @mousedown="(e) => handleResizeStart(e, row.vIdx, row.rIdx, aIdx, assignment)" />
                   <div v-if="assignment._ongoing" class="position-absolute"
@@ -260,7 +260,7 @@ export default {
         const end = new Date(endStr);
         const duration = Math.max(1, Math.floor((end - start) / msDay) + 1);
 
-        const typeVal = it.Type !== undefined ? it.Type : it.type;
+        const typeVal = it.Type || it.type;
         let status = "active";
         if (typeof typeVal === "number") {
           status =
@@ -276,6 +276,7 @@ export default {
           status,
           startDate: startStr,
           endDate: endStr,
+          type: typeVal,
         });
       });
 
@@ -381,7 +382,10 @@ export default {
       }
     },
     handleResizeStart(e, vesselIdx, rankIdx, assignmentIdx, assignment) {
-      console.log("Resize start", vesselIdx, rankIdx, assignmentIdx, assignment);
+      if (assignment.type !== 3) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
       this.resizing = {
